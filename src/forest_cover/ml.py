@@ -64,6 +64,64 @@ class MLApp(cmd2.Cmd):
                          f' методы оценки модели (seteval) или сразу перейдите к обучению (train).')
         except ValueError:
             pass
+        
+    # SETPATH
+
+    setpath_parser = cmd2.Cmd2ArgumentParser()
+    setpath_subparsers = setpath_parser.add_subparsers(title='подкоманды', help='справка по подкомандам:')
+
+    parser_load = setpath_subparsers.add_parser('load', help='задать путь к анализируемому датасету')
+    parser_load.add_argument('input_file', type=str, help='csv-файл с анализируемыми данными')
+    parser_export = setpath_subparsers.add_parser('export', help='задать путь для сохранения csv-файла с предиктом')
+    parser_export.add_argument('output_file', type=str,
+                               help='csv-файл, который будет создан по результам работы предикта')
+    parser_dump = setpath_subparsers.add_parser('dump', help='задать путь для сохранения параметров модели')
+    parser_dump.add_argument('dump_file', type=str, help='joblib-файл, в который будут сохраняться параметры модели')
+
+    def setpath_load(self, args: argparse.Namespace) -> None:
+        filepath = make_abs_path(args.input_file)
+        if check_file_exists(filepath):
+            if check_extension(filepath, "csv"):
+                self.config["loadpath"] = filepath
+                self.poutput(f"Установлен путь к файлу датасета: {filepath}")
+            else:
+                raise ValueError("Указан путь к файлу с форматом, отличным от csv")
+        else:
+            raise FileNotFoundError(f"Файл по указанному пути ({filepath}) не найден")
+    parser_load.set_defaults(func=setpath_load)
+
+    def setpath_export(self, args: argparse.Namespace) -> None:
+        filepath = make_abs_path(args.output_file)
+        if check_dir_exists(filepath):
+            if check_extension(filepath, "csv"):
+                self.config["exportpath"] = filepath
+                self.poutput(f"Установлен путь для выгрузки предикта: {filepath}")
+            else:
+                raise ValueError("Указан путь к файлу с форматом, отличным от csv")
+        else:
+            raise FileNotFoundError(f"Указанная папка для размещения файла не найдена ({filepath})")
+    parser_export.set_defaults(func=setpath_export)
+
+    def setpath_dump(self, args: argparse.Namespace) -> None:
+        filepath = make_abs_path(args.dump_file)
+        if check_dir_exists(filepath):
+            if check_extension(filepath, "joblib"):
+                self.config["dumppath"] = filepath
+                self.poutput(f"Установлен путь для выгрузки данных модели: {filepath}")
+            else:
+                raise ValueError("Указан путь к файлу с форматом, отличным от joblib")
+        else:
+            raise FileNotFoundError(f"Указанная папка для размещения файла не найдена ({filepath})")
+    parser_dump.set_defaults(func=setpath_dump)
+
+    @cmd2.with_argparser(setpath_parser)
+    @with_category('Управление файлами')
+    def do_setpath(self, args: argparse.Namespace):
+        func = getattr(args, 'func', None)
+        if func is not None:
+            func(self, args)
+        else:
+            self.do_help('setpath')
 
 
 def start():
