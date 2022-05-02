@@ -140,6 +140,22 @@ class MLApp(cmd2.Cmd):
                          f"Путь для выгрузки предикта: {make_abs_path(self.config['exportpath'])}\n"
                          f"Путь для выгрузки данных модели: {make_abs_path(self.config['dumppath'])}\n")
 
+    # DATASPLIT
+
+    split_parser = cmd2.Cmd2ArgumentParser()
+    split_parser.add_argument('test_size', type=float,
+                              help='Значение типа float в диапазоне от [0.0, 1.0), равное доле тестовых данных.')
+
+    @with_category('Оценка модели')
+    @cmd2.with_argparser(split_parser)
+    def do_datasplitratio(self, args):
+        if 0 <= args.test_size < 1:
+            self.config["split"] = args.test_size
+            self.poutput(f"Установлена доля тестовых данных: {args.test_size}")
+        else:
+            raise ValueError("Значение доли тестовых данных должно быть в диапазоне [0.0, 1.0)")
+
+
 
 def start():
     app = MLApp()
