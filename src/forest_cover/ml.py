@@ -64,7 +64,7 @@ class MLApp(cmd2.Cmd):
                          f' методы оценки модели (seteval) или сразу перейдите к обучению (train).')
         except ValueError:
             pass
-        
+
     # SETPATH
 
     setpath_parser = cmd2.Cmd2ArgumentParser()
@@ -122,6 +122,23 @@ class MLApp(cmd2.Cmd):
             func(self, args)
         else:
             self.do_help('setpath')
+
+    # PATHS
+
+    paths_parser = cmd2.Cmd2ArgumentParser()
+    paths_parser.add_argument('-r', '--reset', action='store_true', help='сброс на значения по умолчанию')
+
+    @with_category('Управление файлами')
+    @cmd2.with_argparser(paths_parser)
+    def do_paths(self, args):
+        if args.reset:
+            for key in ["loadpath", "exportpath", "dumppath"]:
+                self.config[key] = CONFIG_DEFAULTS[key]
+            self.poutput("Установлены значения путей к файлам по умолчанию")
+        else:
+            self.poutput(f"Путь к датасету: {make_abs_path(self.config['loadpath'])}\n"
+                         f"Путь для выгрузки предикта: {make_abs_path(self.config['exportpath'])}\n"
+                         f"Путь для выгрузки данных модели: {make_abs_path(self.config['dumppath'])}\n")
 
 
 def start():
