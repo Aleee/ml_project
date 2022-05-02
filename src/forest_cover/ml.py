@@ -1,6 +1,17 @@
 import cmd2
 
 
+CONFIG_DEFAULTS = {"loadpath": "data/train.csv",
+                   "exportpath": "data/submission.csv",
+                   "dumppath": "data/model.joblib",
+                   "model": "logit",
+                   "scaler": "none",
+                   "eval": "kfoldcv",
+                   "split": 0.3,
+                   "targetcolumn": "Cover_Type",
+                   "randomstate": 42}
+
+
 class MLApp(cmd2.Cmd):
 
     def __init__(self, *args, **kwargs):
@@ -12,6 +23,9 @@ class MLApp(cmd2.Cmd):
         self.intro = style("Начните работу с выбора алгоритма (\'setmodel\'). "
                            "Справка: \'?\' или \'help\'. Выход: \'quit\'.",
                            bold=True)
+
+        self.config = CONFIG_DEFAULTS
+        self.data = None
 
 
 def start():
