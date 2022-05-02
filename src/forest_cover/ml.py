@@ -1,5 +1,13 @@
 import cmd2
+from cmd2 import (
+    CommandSet,
+    with_argparser,
+    with_category,
+    style
+)
+import argparse
 
+from .loadable import LoadableLogit, LoadableTree, LoadableForest, LoadablekNN
 
 CONFIG_DEFAULTS = {"loadpath": "data/train.csv",
                    "exportpath": "data/submission.csv",
@@ -26,6 +34,36 @@ class MLApp(cmd2.Cmd):
 
         self.config = CONFIG_DEFAULTS
         self.data = None
+
+        self._logit = LoadableLogit(self)
+        self._tree = LoadableTree(self)
+        self._forest = LoadableForest(self)
+        self._knn = LoadablekNN(self)
+
+    # SETMODEL
+
+    setmodel_parser = cmd2.Cmd2ArgumentParser()
+    setmodel_parser.add_argument('algorythm', type=str, choices=['logit', 'tree', 'forest', 'knn'],
+                                 help='Выберите один из следующих алгоритмов: логистическая регрессия (logit), '
+                                      'дерево решений (tree), случайный лес (forest) или k-ближайших соседей (knn)')
+
+    @with_argparser(setmodel_parser)
+    @with_category('Выбор алгоритма')
+    def do_setmodel(self, ns: argparse.Namespace) -> None:
+        self.config["model"] = ns.algorythm
+
+        for command_set in [self._logit, self._tree, self._forest, self._knn]:
+            try:
+                self.unregister_command_set(command_set)
+            except ValueError:
+                pass
+
+        try:
+            self.register_command_set(getattr(self, f"_{ns.algorythm}"))
+            self.poutput(f'Выбрана модель: {ns.algorythm}. Теперь настройте препроцессинг (scaler),'
+                         f' методы оценки модели (seteval) или сразу перейдите к обучению (train).')
+        except ValueError:
+            pass
 
 
 def start():
