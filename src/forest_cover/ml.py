@@ -140,6 +140,38 @@ class MLApp(cmd2.Cmd):
                          f"Путь для выгрузки предикта: {make_abs_path(self.config['exportpath'])}\n"
                          f"Путь для выгрузки данных модели: {make_abs_path(self.config['dumppath'])}\n")
 
+    # SCALER
+
+    scaler_parser = cmd2.Cmd2ArgumentParser()
+    scaler_parser.add_argument('scaler', type=str, choices=['none', 'standard', 'minmax', 'maxabs', 'robust'],
+                               help='Выберите один из доступных алгоритмов машстабирования данных или отключите его '
+                                    '(none).')
+
+    @cmd2.with_category('Препроцессинг')
+    @cmd2.with_argparser(scaler_parser)
+    def do_scaler(self, args: argparse.Namespace) -> None:
+        self.config['scaler'] = args.scaler
+        if args.scaler == 'none':
+            self.poutput('Масштабирование данных отключено')
+        else:
+            self.poutput(f'Установлен алгоритм масштабирования данных: {args.scaler}')
+
+    # DIMREDUCT
+
+    dimreduct_parser = cmd2.Cmd2ArgumentParser()
+    dimreduct_parser.add_argument('dimreduct', type=str, choices=['none', 'pca', 'lda'],
+                                  help='Выберите один из доступных алгоритмов уменьшения размерности '
+                                       'или отключите его (none).')
+
+    @cmd2.with_category('Препроцессинг')
+    @cmd2.with_argparser(dimreduct_parser)
+    def do_dimreduct(self, args: argparse.Namespace) -> None:
+        self.config['dimreduct'] = args.dimreduct
+        if args.dimreduct == 'none':
+            self.poutput('Уменьшение размерности данных отключено')
+        else:
+            self.poutput(f'Установлен алгоритм уменьшения размерности данных: {args.dimreduct}')
+
 
 def start():
     app = MLApp()
