@@ -7,7 +7,11 @@ from cmd2 import (
 )
 import argparse
 
+from .pathhandler import make_abs_path, check_file_exists, check_dir_exists, check_extension
 from .loadable import LoadableLogit, LoadableTree, LoadableForest, LoadablekNN
+from .featureeng import make_new_features
+from .datahandler import load_data
+
 
 CONFIG_DEFAULTS = {"loadpath": "data/train.csv",
                    "exportpath": "data/submission.csv",
