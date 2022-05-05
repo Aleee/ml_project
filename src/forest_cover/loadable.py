@@ -105,14 +105,36 @@ class LoadableTree(CommandSet):
             pass
 
 
-@with_default_category('Обучение (случайный лес)')
+@with_default_category('Обучение и оценка (случайный лес)')
 class LoadableForest(CommandSet):
+
+    train_parser = cmd2.Cmd2ArgumentParser()
+    train_parser.add_argument('-n', '--n_estimators', type=int, default=100,
+                              help='количество деревьев в лесу [по умолчанию: 100]')
+    train_parser.add_argument('-d', '--max_depth', type=str, default='None',
+                              help='максимальная глубина дерева; целое положительное число или None '
+                                   '[по умолчанию: None]')
+    train_parser.add_argument('-f', '--max_features', type=str, default='auto',
+                              help='максимальное число признаков, используемое при разделении; число или одно из '
+                                   'следующих значений: auto, sqrt, log2 [по умолчанию: auto]')
+    train_parser.add_argument('-c', '--criterion', type=str, default='gini', choices=['gini', 'entropy'],
+                              help='функция, оценивающая качество разделения [по умолчанию: gini]')
+
     def __init__(self, ml_app):
         super().__init__()
         self.app = ml_app
 
-    def do_train(self, _: cmd2.Statement):
-        self._cmd.poutput('random forest tree trained')
+    @cmd2.with_argparser(train_parser, with_unknown_args=True)
+    def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
+        try:
+            ns.max_depth = int(ns.max_depth)
+        except ValueError:
+            if str.lower(ns.max_depth) == 'none':
+                ns.max_depth = None
+        try:
+            ns.max_features = int(ns.max_features)
+        except ValueError:
+            pass
 
 
 @with_default_category('Обучение (kNN)')
