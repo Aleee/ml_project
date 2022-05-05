@@ -137,11 +137,19 @@ class LoadableForest(CommandSet):
             pass
 
 
-@with_default_category('Обучение (kNN)')
+@with_default_category('Обучение и оценка (kNN)')
 class LoadablekNN(CommandSet):
+
+    train_parser = cmd2.Cmd2ArgumentParser()
+    train_parser.add_argument('-k', '--n_neighbors', type=int, default=5,
+                              help='количество ближаших объектов, оцениваемых при классификации [по умолчанию: 5]')
+    train_parser.add_argument('-w', '--weights', type=str, choices=['uniform', 'distance'], default='uniform',
+                              help='функция взвешивания [по умолчанию: uniform]')
+
     def __init__(self, ml_app):
         super().__init__()
         self.app = ml_app
 
-    def do_train(self, _: cmd2.Statement):
-        self._cmd.poutput('kNN trained')
+    @cmd2.with_argparser(train_parser, with_unknown_args=True)
+    def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
+        finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
