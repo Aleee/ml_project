@@ -52,14 +52,28 @@ def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) -> 
     return all_parameters
 
 
-@with_default_category('Обучение (логистическая регрессия)')
+@with_default_category('Обучение и оценка (логистическая регрессия)')
 class LoadableLogit(CommandSet):
+
+    train_parser = cmd2.Cmd2ArgumentParser()
+    train_parser.add_argument('-p', '--penalty', type=str, choices=['none', 'l1', 'l2', 'elasticnet'], default='l2',
+                              help='норма регуляризации [по умолчанию: l2]')
+    train_parser.add_argument('-c', '--C', type=float, default=1.0,
+                              help='сила регуляризации (обратная зависимость) [по умолчанию: 1.0]')
+    train_parser.add_argument('-m', '--max_iter', type=int, default=100,
+                              help='максимальное число итераций при попытке достижения сходимости [по умолчанию: 100]')
+
     def __init__(self, ml_app):
         super().__init__()
         self.app = ml_app
 
-    def do_train(self, _: cmd2.Statement):
-        self._cmd.poutput('logit trained')
+    @cmd2.with_argparser(train_parser, with_unknown_args=True)
+    def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
+        if ns.penalty in ['l2', 'elasticnet']:
+            unknown.append('--solver')
+            unknown.append('saga')
+            unknown.append('--l1_ratio')
+            unknown.append('0.5')
 
 
 @with_default_category('Обучение (дерево решений)')
