@@ -10,6 +10,48 @@ from .datahandler import load_data
 from .train import train
 
 
+def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) -> dict:
+    uknown_parameters = {}
+    if len(u_args) % 2 != 0:
+        raise ValueError('Список дополнительных аругментов имеет неверную длину (заданы аргументы без значений)')
+    for name, value in zip(u_args[::2], u_args[1::2]):
+        try:
+            if name[:2] != '--':
+                raise ValueError(f'Неверный аргумент {name}: аргумент должен начинаться с --')
+        except ValueError as e:
+            raise ValueError(f'Неверный аргумент {name}: аргумент должен начинаться с --') from e
+        try:
+            value = dict(value)
+        except ValueError:
+            try:
+                value = int(value)
+            except ValueError:
+                try:
+                    value = float(value)
+                except ValueError:
+                    if str.lower(value) == 'none':
+                        value = None
+                    elif str.lower(value) == 'true':
+                        value = True
+                    elif str.lower(value) == 'false':
+                        value = False
+            try:
+                uknown_parameters[name[2:]] = value
+            except KeyError as e:
+                raise KeyError(f'Не удалось разместить параметр {name} (возможно, дубликат?)') from e
+
+    known_parameters = clean_parameters(vars(k_args))
+    all_parameters = uknown_parameters | known_parameters
+
+    for key, value in all_parameters.items():
+        try:
+            MODELS[model].set_params(**{key: value})
+        except ValueError as e:
+            raise ValueError(f'Не удалось распознать введеный дополнительный параметр {key}') from e
+
+    return all_parameters
+
+
 @with_default_category('Обучение (логистическая регрессия)')
 class LoadableLogit(CommandSet):
     def __init__(self, ml_app):
