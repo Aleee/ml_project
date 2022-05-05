@@ -3,11 +3,24 @@ from cmd2 import (
     CommandSet,
     with_default_category)
 import argparse
+import numpy as np
+from typing import Any
 
-from .models import set_model, clean_parameters
+from .models import set_model, clean_parameters, MODELS
 from .pipeline import create_pipeline
 from .datahandler import load_data
 from .train import train
+
+
+def finilize(app: Any, parameters: dict) -> None:
+    if not app.data:
+        app.data = load_data(app.config['loadpath'], app.config['targetcolumn'])
+    model = set_model(app.config['model'], parameters)
+    app.poutput(f"Строим модель {app.config['model']} c параметрами {parameters} (scaler: {app.config['scaler']}, "
+                f"feateng: {app.config['feateng']}, dimreduct: {app.config['dimreduct']})...")
+    pipeline = create_pipeline(app.config['scaler'], app.config['dimreduct'], model)
+    scores = train(pipeline, app.data, parameters, app.config)
+    app.poutput(f"Успешно! Accuracy (balanced): {round(float(np.mean(scores['test_balanced_accuracy'])), 4)}")
 
 
 def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) -> dict:
@@ -74,6 +87,7 @@ class LoadableLogit(CommandSet):
             unknown.append('saga')
             unknown.append('--l1_ratio')
             unknown.append('0.5')
+        finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
 
 
 @with_default_category('Обучение и оценка (дерево решений)')
@@ -103,6 +117,7 @@ class LoadableTree(CommandSet):
             ns.max_features = int(ns.max_features)
         except ValueError:
             pass
+        finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
 
 
 @with_default_category('Обучение и оценка (случайный лес)')
@@ -135,6 +150,7 @@ class LoadableForest(CommandSet):
             ns.max_features = int(ns.max_features)
         except ValueError:
             pass
+        finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
 
 
 @with_default_category('Обучение и оценка (kNN)')
