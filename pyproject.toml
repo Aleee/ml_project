@@ -1,17 +1,21 @@
 [tool.poetry]
-name = "ML"
-version = "0.1.0"
+name = "forest_cover"
+version = "0.2.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Aliaksei Raik <aleeelr@gmail.com>"]
+
+[tool.poetry.scripts]
+ml = "forest_cover.ml:start"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pandas = "^1.4.2"
+pandas = "^1.4.1"
 numpy = "^1.22.3"
 scikit-learn = "^1.0.2"
-mlflow = "^1.25.1"
 sklearn = "^0.0"
 cmd2 = "^2.4.1"
+mlflow = "^1.25.1"
+featuretools = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
