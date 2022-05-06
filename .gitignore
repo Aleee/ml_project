@@ -1,2 +1,3 @@
 data
-.idea/
+mlruns
+src/forest_cover/__pychache__
