@@ -82,11 +82,12 @@ class LoadableLogit(CommandSet):
 
     @cmd2.with_argparser(train_parser, with_unknown_args=True)
     def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
-        if ns.penalty in ['l2', 'elasticnet']:
+        if ns.penalty in ['l1', 'elasticnet']:
             unknown.append('--solver')
             unknown.append('saga')
-            unknown.append('--l1_ratio')
-            unknown.append('0.5')
+            if ns.penalty == 'elasticnet':
+                unknown.append('--l1_ratio')
+                unknown.append('0.5')
         finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
 
 
