@@ -32,9 +32,9 @@ def create_pipeline(scaler: str, dimreduct: str, model: Union[LogisticRegression
     pipeline_steps = []
 
     if scaler != 'none':
-        pipeline_steps.append(('scaler', SCALERS[scaler]))
+        pipeline_steps.append(('sca', SCALERS[scaler]))
     if dimreduct != 'none':
-        pipeline_steps.append(('dimreduct', DIMREDUCTS[dimreduct]))
-    pipeline_steps.append(('classifier', model))
+        pipeline_steps.append(('dmr', DIMREDUCTS[dimreduct]))
+    pipeline_steps.append(('clf', model))
 
     return Pipeline(steps=pipeline_steps)
