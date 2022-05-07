@@ -13,13 +13,11 @@ DEFAULT_SEARCH_GRID = {
     },
     'tree': {
         'clf__max_depth': [3, 5, 10, 20, 35],
-        'clf__min_samples_leaf': [5, 10, 20, 50],
-        'clf__criterion': ['gini', 'entropy']
+        'clf__min_samples_leaf': [5, 10, 20, 50]
     },
     'forest': {
         'clf__n_estimators': [50, 150, 250],
-        'clf__max_depth': [3, 15, 50],
-        'clf__criterion': ['gini', 'entropy']
+        'clf__max_depth': [3, 15, 50]
     },
     'knn': {
         'clf__n_neighbors': [5, 10, 20],
