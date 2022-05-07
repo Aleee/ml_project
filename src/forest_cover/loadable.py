@@ -4,12 +4,14 @@ from cmd2 import (
     with_default_category)
 import argparse
 import numpy as np
+from ast import literal_eval
 from typing import Any
 
 from .models import set_model, clean_parameters, MODELS
 from .pipeline import create_pipeline
 from .datahandler import load_data
 from .train import train
+from .hypersearch import hypersearch, check_params_validity, append_parameter_profixes
 
 
 def finilize(app: Any, parameters: dict) -> None:
@@ -73,8 +75,8 @@ class LoadableLogit(CommandSet):
                               help='норма регуляризации [по умолчанию: l2]')
     train_parser.add_argument('-c', '--C', type=float, default=1.0,
                               help='сила регуляризации (обратная зависимость) [по умолчанию: 1.0]')
-    train_parser.add_argument('-m', '--max_iter', type=int, default=100,
-                              help='максимальное число итераций при попытке достижения сходимости [по умолчанию: 100]')
+    train_parser.add_argument('-m', '--max_iter', type=int, default=1000,
+                              help='максимальное число итераций при попытке достижения сходимости [по умолчанию: 1000]')
 
     def __init__(self, ml_app):
         super().__init__()
@@ -170,3 +172,66 @@ class LoadablekNN(CommandSet):
     @cmd2.with_argparser(train_parser, with_unknown_args=True)
     def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
         finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
+
+
+class LoadableHyperSearch(CommandSet):
+
+    hyper_parser = cmd2.Cmd2ArgumentParser()
+    hyper_parser.add_argument('-p', '--param_grid', type=str, default='',
+                              help='сетка параметров для функции GridSearch, представленная словарем (dict), '
+                                   'ограниченным фигурными скобками {...} и не содержащим пробелов; при отсутствии '
+                                   'аргумента будет передан стандартный набор значений для поиска')
+
+    def __init__(self, ml_app):
+        super().__init__()
+        self.app = ml_app
+
+    @cmd2.with_argparser(hyper_parser)
+    def do_hypersearch(self, ns: argparse.Namespace) -> None:
+        if ns.param_grid:
+            try:
+                parameters = literal_eval(ns.param_grid)
+                parameters = append_parameter_profixes(parameters)
+                check_params_validity(self.app.config, parameters)
+            except ValueError as e:
+                print(f'Не удалось расшифровать введенные параметры: они должны быть представлены словарем (dict) '
+                      f'без пробелов с валидными для данной модели параметрами, заключенными в кавычки, и значениями: '
+                      f'{e}')
+                return
+        else:
+            parameters = ''
+        self.app.poutput('Оцениваем алгоритм и гиперпараметры...')
+        if not self.app.data:
+            self.app.data = load_data(self.app.config['loadpath'], self.app.config['targetcolumn'])
+        params, scores = hypersearch(self.app.config, self.app.data, parameters)
+        self.app.poutput(f'Метрики оцениваемого алгоритма: accuracy (balanced): '
+                         f'{round(float(np.mean(scores["test_balanced_accuracy"])), 4)},'
+                         f' '
+                         f'(метод оценки - nested cross-validation). Модель: {self.app.config["model"]}, '
+                         f'scaler: {self.app.config["scaler"]}, dimreduct: {self.app.config["dimreduct"]}, '
+                         f'feateng: {self.app.config["feateng"]}')
+        self.app.poutput(f'Лучший набор параметров из исследованных GridSearch: {params}')
+
+
+@with_default_category('Обучение и оценка (логистическая регрессия)')
+class LoadableLogitHyperSearch(LoadableHyperSearch):
+    def __init__(self, ml_app):
+        super().__init__(ml_app)
+
+
+@with_default_category('Обучение и оценка (дерево решений)')
+class LoadableTreeHyperSearch(LoadableHyperSearch):
+    def __init__(self, ml_app):
+        super().__init__(ml_app)
+
+
+@with_default_category('Обучение и оценка (случайный лес)')
+class LoadableForestHyperSearch(LoadableHyperSearch):
+    def __init__(self, ml_app):
+        super().__init__(ml_app)
+
+
+@with_default_category('Обучение и оценка (kNN)')
+class LoadableKnnHyperSearch(LoadableHyperSearch):
+    def __init__(self, ml_app):
+        super().__init__(ml_app)

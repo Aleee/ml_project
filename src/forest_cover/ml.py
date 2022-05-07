@@ -5,7 +5,8 @@ import pandas as pd
 import hashlib
 
 from .pathhandler import make_abs_path, check_file_exists, check_dir_exists, check_extension
-from .loadable import LoadableLogit, LoadableTree, LoadableForest, LoadablekNN
+from .loadable import LoadableLogit, LoadableTree, LoadableForest, LoadablekNN, LoadableLogitHyperSearch, \
+    LoadableTreeHyperSearch, LoadableForestHyperSearch, LoadableKnnHyperSearch
 from .featureeng import make_new_features
 from .datahandler import load_data
 
@@ -33,7 +34,6 @@ class MLApp(cmd2.Cmd):
                                      'run_script', 'set', 'shell', 'shortcuts'])
         self.default_category = 'Встроенные команды'
 
-        warnings.filterwarnings('ignore')
         self.intro = cmd2.style('Начните работу с выбора алгоритма (\'setmodel\'). '
                                 'Справка: \'?\' или \'help\'. Выход: \'quit\'.',
                                 bold=True)
@@ -45,6 +45,11 @@ class MLApp(cmd2.Cmd):
         self._tree = LoadableTree(self)
         self._forest = LoadableForest(self)
         self._knn = LoadablekNN(self)
+
+        self._hypersearchlogit = LoadableLogitHyperSearch(self)
+        self._hypersearchtree = LoadableTreeHyperSearch(self)
+        self._hypersearchforest = LoadableForestHyperSearch(self)
+        self._hypersearchknn = LoadableKnnHyperSearch(self)
 
     # SETMODEL
 
@@ -58,16 +63,22 @@ class MLApp(cmd2.Cmd):
     def do_setmodel(self, ns: argparse.Namespace) -> None:
         self.config['model'] = ns.algorythm
 
-        for command_set in [self._logit, self._tree, self._forest, self._knn]:
+        for command_set in [(self._logit, self._hypersearchlogit),
+                            (self._tree, self._hypersearchtree),
+                            (self._forest, self._hypersearchforest),
+                            (self._knn, self._hypersearchknn)]:
             try:
-                self.unregister_command_set(command_set)
+                self.unregister_command_set(command_set[0])
+                self.unregister_command_set(command_set[1])
             except ValueError:
                 pass
 
         try:
             self.register_command_set(getattr(self, f'_{ns.algorythm}'))
+            self.register_command_set(getattr(self, f'_hypersearch{ns.algorythm}'))
             self.poutput(f'Выбрана модель: {ns.algorythm}. Настройте препроцессинг (список команд по \"?\") '
-                         f'или сразу перейдите к обучению (train).')
+                         f'или сразу перейдите к обучению (train) или автоматическому подбору гиперпараметров '
+                         f'(hypersearch).')
         except ValueError:
             pass
 
@@ -194,7 +205,6 @@ class MLApp(cmd2.Cmd):
         elif args.feateng == 'auto':
             if not self.data or self.config['feateng'] == 'none':
                 self.data = load_data(self.config['loadpath'], self.config['targetcolumn'])
-                print(hashlib.sha1(pd.util.hash_pandas_object(self.data[0]).values).hexdigest())
                 if hashlib.sha1(pd.util.hash_pandas_object(self.data[0]).values).hexdigest() != FOREST_COVER_HASH:
                     self.poutput(f'Эта опция доступна только для датасета Forest Cover Type Prediction')
                 else:
@@ -207,6 +217,7 @@ class MLApp(cmd2.Cmd):
 
 
 def start() -> None:
+    warnings.filterwarnings('ignore')
     app = MLApp()
     app.cmdloop()
 

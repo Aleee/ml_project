@@ -11,6 +11,13 @@ MODELS = {'logit': LogisticRegression(),
           'forest': RandomForestClassifier(),
           'knn': KNeighborsClassifier()}
 
+NOT_SO_DEFAULT_PARAMETERS = {
+    'logit': {'max_iter': 1000},
+    'tree': {},
+    'forest': {},
+    'knn': {}
+}
+
 
 def set_model(model: str, parameters: dict) -> Union[LogisticRegression, DecisionTreeClassifier,
                                                      RandomForestClassifier, KNeighborsClassifier]:
