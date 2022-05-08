@@ -8,7 +8,8 @@ def make_abs_path(path: str) -> str:
         return path
     else:
         root_dir = Path(os.getcwd())
-        return os.path.join(root_dir, *[s for s in re.split(r'[\|\\|/|//]+', path)])
+        return os.path.join(root_dir, *[s for s in re.split(r'[\|\\|/|//]+',
+                                                            path)])
 
 
 def check_file_exists(path: str) -> bool:

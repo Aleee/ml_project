@@ -27,8 +27,11 @@ DIMREDUCTS = {
 }
 
 
-def create_pipeline(scaler: str, dimreduct: str, model: Union[LogisticRegression, DecisionTreeClassifier,
-                                                              RandomForestClassifier, NearestNeighbors]) -> Pipeline:
+def create_pipeline(scaler: str,
+                    dimreduct: str,
+                    model: Union[LogisticRegression, DecisionTreeClassifier,
+                                 RandomForestClassifier, NearestNeighbors]) \
+        -> Pipeline:
     pipeline_steps = []
 
     if scaler != 'none':

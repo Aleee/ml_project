@@ -19,8 +19,10 @@ NOT_SO_DEFAULT_PARAMETERS = {
 }
 
 
-def set_model(model: str, parameters: dict) -> Union[LogisticRegression, DecisionTreeClassifier,
-                                                     RandomForestClassifier, KNeighborsClassifier]:
+def set_model(model: str,
+              parameters: dict) \
+        -> Union[LogisticRegression, DecisionTreeClassifier,
+                 RandomForestClassifier, KNeighborsClassifier]:
     return MODELS[model].set_params(**parameters)
 
 

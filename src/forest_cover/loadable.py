@@ -11,30 +11,41 @@ from .models import set_model, clean_parameters, MODELS
 from .pipeline import create_pipeline
 from .datahandler import load_data
 from .train import train
-from .hypersearch import hypersearch, check_params_validity, append_parameter_profixes
+from .hypersearch import hypersearch, check_params_validity, \
+    append_parameter_profixes
 
 
 def finilize(app: Any, parameters: dict) -> None:
     if not app.data:
-        app.data = load_data(app.config['loadpath'], app.config['targetcolumn'])
+        app.data = load_data(app.config['loadpath'],
+                             app.config['targetcolumn'])
     model = set_model(app.config['model'], parameters)
-    app.poutput(f"Строим модель {app.config['model']} c параметрами {parameters} (scaler: {app.config['scaler']}, "
-                f"feateng: {app.config['feateng']}, dimreduct: {app.config['dimreduct']})...")
-    pipeline = create_pipeline(app.config['scaler'], app.config['dimreduct'], model)
+    app.poutput(f"Строим модель {app.config['model']} c параметрами "
+                f"{parameters} (scaler: {app.config['scaler']}, "
+                f"feateng: {app.config['feateng']}, dimreduct: "
+                f"{app.config['dimreduct']})...")
+    pipeline = create_pipeline(app.config['scaler'], app.config['dimreduct'],
+                               model)
     scores = train(pipeline, app.data, parameters, app.config)
-    app.poutput(f"Успешно! Accuracy (balanced): {round(float(np.mean(scores['test_balanced_accuracy'])), 4)}")
+    app.poutput(
+        f"Успешно! Accuracy (balanced): "
+        f"{round(float(np.mean(scores['test_balanced_accuracy'])), 4)}")
 
 
-def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) -> dict:
+def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) \
+        -> dict:
     uknown_parameters = {}
     if len(u_args) % 2 != 0:
-        raise ValueError('Список дополнительных аругментов имеет неверную длину (заданы аргументы без значений)')
+        raise ValueError('Список дополнительных аругментов имеет '
+                         'неверную длину (заданы аргументы без значений)')
     for name, value in zip(u_args[::2], u_args[1::2]):
         try:
             if name[:2] != '--':
-                raise ValueError(f'Неверный аргумент {name}: аргумент должен начинаться с --')
+                raise ValueError(f'Неверный аргумент {name}: аргумент '
+                                 f'должен начинаться с --')
         except ValueError as e:
-            raise ValueError(f'Неверный аргумент {name}: аргумент должен начинаться с --') from e
+            raise ValueError(f'Неверный аргумент {name}: аргумент должен '
+                             f'начинаться с --') from e
         try:
             value = dict(value)
         except ValueError:
@@ -53,7 +64,8 @@ def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) -> 
             try:
                 uknown_parameters[name[2:]] = value
             except KeyError as e:
-                raise KeyError(f'Не удалось разместить параметр {name} (возможно, дубликат?)') from e
+                raise KeyError(f'Не удалось разместить параметр {name} '
+                               f'(возможно, дубликат?)') from e
 
     known_parameters = clean_parameters(vars(k_args))
     all_parameters = uknown_parameters | known_parameters
@@ -62,7 +74,8 @@ def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) -> 
         try:
             MODELS[model].set_params(**{key: value})
         except ValueError as e:
-            raise ValueError(f'Не удалось распознать введеный дополнительный параметр {key}') from e
+            raise ValueError(f'Не удалось распознать введеный дополнительный '
+                             f'параметр {key}') from e
 
     return all_parameters
 
@@ -71,12 +84,21 @@ def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) -> 
 class LoadableLogit(CommandSet):
 
     train_parser = cmd2.Cmd2ArgumentParser()
-    train_parser.add_argument('-p', '--penalty', type=str, choices=['none', 'l1', 'l2', 'elasticnet'], default='l2',
+    train_parser.add_argument('-p', '--penalty',
+                              type=str,
+                              choices=['none', 'l1', 'l2', 'elasticnet'],
+                              default='l2',
                               help='норма регуляризации [по умолчанию: l2]')
-    train_parser.add_argument('-c', '--C', type=float, default=1.0,
-                              help='сила регуляризации (обратная зависимость) [по умолчанию: 1.0]')
-    train_parser.add_argument('-m', '--max_iter', type=int, default=1000,
-                              help='максимальное число итераций при попытке достижения сходимости [по умолчанию: 1000]')
+    train_parser.add_argument('-c', '--C',
+                              type=float,
+                              default=1.0,
+                              help='сила регуляризации (обратная зависимость) '
+                                   '[по умолчанию: 1.0]')
+    train_parser.add_argument('-m', '--max_iter',
+                              type=int,
+                              default=1000,
+                              help='максимальное число итераций при попытке до'
+                                   'стижения сходимости [по умолчанию: 1000]')
 
     def __init__(self, ml_app):
         super().__init__()
@@ -90,19 +112,30 @@ class LoadableLogit(CommandSet):
             if ns.penalty == 'elasticnet':
                 unknown.append('--l1_ratio')
                 unknown.append('0.5')
-        finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
+        finilize(self.app, parse_unknown_args(self.app.config['model'],
+                                              unknown, ns))
 
 
 @with_default_category('Обучение и оценка (дерево решений)')
 class LoadableTree(CommandSet):
     train_parser = cmd2.Cmd2ArgumentParser()
-    train_parser.add_argument('-d', '--max_depth', type=str, default='None',
-                              help='максимальная глубина дерева; целое положительное число или None '
-                                   '[по умолчанию: None]')
-    train_parser.add_argument('-f', '--max_features', type=str, default='auto',
-                              help='максимальное число признаков, используемое при разделении; число или одно из '
-                                   'следующих значений: auto, sqrt, log2 [по умолчанию: auto]')
-    train_parser.add_argument('-c', '--criterion', type=str, default='gini', choices=['gini', 'entropy'],
+    train_parser.add_argument('-d', '--max_depth',
+                              type=str,
+                              default='None',
+                              help='максимальная глубина дерева; целое '
+                                   'положительное число или None [по '
+                                   'умолчанию: None]')
+    train_parser.add_argument('-f', '--max_features',
+                              type=str,
+                              default='auto',
+                              help='максимальное число признаков, используемое'
+                                   ' при разделении; число или одно из '
+                                   'следующих значений: auto, sqrt, log2 '
+                                   '[по умолчанию: auto]')
+    train_parser.add_argument('-c', '--criterion',
+                              type=str,
+                              default='gini',
+                              choices=['gini', 'entropy'],
                               help='функция, оценивающая качество разделения')
 
     def __init__(self, ml_app):
@@ -120,23 +153,38 @@ class LoadableTree(CommandSet):
             ns.max_features = int(ns.max_features)
         except ValueError:
             pass
-        finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
+        finilize(self.app, parse_unknown_args(self.app.config['model'],
+                                              unknown, ns))
 
 
 @with_default_category('Обучение и оценка (случайный лес)')
 class LoadableForest(CommandSet):
 
     train_parser = cmd2.Cmd2ArgumentParser()
-    train_parser.add_argument('-n', '--n_estimators', type=int, default=100,
-                              help='количество деревьев в лесу [по умолчанию: 100]')
-    train_parser.add_argument('-d', '--max_depth', type=str, default='None',
-                              help='максимальная глубина дерева; целое положительное число или None '
+    train_parser.add_argument('-n', '--n_estimators',
+                              type=int,
+                              default=100,
+                              help='количество деревьев в лесу '
+                                   '[по умолчанию: 100]')
+    train_parser.add_argument('-d', '--max_depth',
+                              type=str,
+                              default='None',
+                              help='максимальная глубина дерева; '
+                                   'целое положительное число или None '
                                    '[по умолчанию: None]')
-    train_parser.add_argument('-f', '--max_features', type=str, default='auto',
-                              help='максимальное число признаков, используемое при разделении; число или одно из '
-                                   'следующих значений: auto, sqrt, log2 [по умолчанию: auto]')
-    train_parser.add_argument('-c', '--criterion', type=str, default='gini', choices=['gini', 'entropy'],
-                              help='функция, оценивающая качество разделения [по умолчанию: gini]')
+    train_parser.add_argument('-f', '--max_features',
+                              type=str,
+                              default='auto',
+                              help='максимальное число признаков, используемое'
+                                   ' при разделении; число или одно из следующ'
+                                   'их значений: auto, sqrt, log2 '
+                                   '[по умолчанию: auto]')
+    train_parser.add_argument('-c', '--criterion',
+                              type=str,
+                              default='gini',
+                              choices=['gini', 'entropy'],
+                              help='функция, оценивающая качество '
+                                   'разделения [по умолчанию: gini]')
 
     def __init__(self, ml_app):
         super().__init__()
@@ -153,17 +201,25 @@ class LoadableForest(CommandSet):
             ns.max_features = int(ns.max_features)
         except ValueError:
             pass
-        finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
+        finilize(self.app, parse_unknown_args(self.app.config['model'],
+                                              unknown, ns))
 
 
 @with_default_category('Обучение и оценка (kNN)')
 class LoadablekNN(CommandSet):
 
     train_parser = cmd2.Cmd2ArgumentParser()
-    train_parser.add_argument('-k', '--n_neighbors', type=int, default=5,
-                              help='количество ближаших объектов, оцениваемых при классификации [по умолчанию: 5]')
-    train_parser.add_argument('-w', '--weights', type=str, choices=['uniform', 'distance'], default='uniform',
-                              help='функция взвешивания [по умолчанию: uniform]')
+    train_parser.add_argument('-k', '--n_neighbors',
+                              type=int,
+                              default=5,
+                              help='количество ближаших объектов, оцениваемых '
+                                   'при классификации [по умолчанию: 5]')
+    train_parser.add_argument('-w', '--weights',
+                              type=str,
+                              choices=['uniform', 'distance'],
+                              default='uniform',
+                              help='функция взвешивания [по умолчанию: '
+                                   'uniform]')
 
     def __init__(self, ml_app):
         super().__init__()
@@ -171,16 +227,22 @@ class LoadablekNN(CommandSet):
 
     @cmd2.with_argparser(train_parser, with_unknown_args=True)
     def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
-        finilize(self.app, parse_unknown_args(self.app.config['model'], unknown, ns))
+        finilize(self.app, parse_unknown_args(self.app.config['model'],
+                                              unknown, ns))
 
 
 class LoadableHyperSearch(CommandSet):
 
     hyper_parser = cmd2.Cmd2ArgumentParser()
-    hyper_parser.add_argument('-p', '--param_grid', type=str, default='',
-                              help='сетка параметров для функции GridSearch, представленная словарем (dict), '
-                                   'ограниченным фигурными скобками {...} и не содержащим пробелов; при отсутствии '
-                                   'аргумента будет передан стандартный набор значений для поиска')
+    hyper_parser.add_argument('-p', '--param_grid',
+                              type=str,
+                              default='',
+                              help='сетка параметров для функции GridSearch, '
+                                   'представленная словарем (dict), ограничен'
+                                   'ным фигурными скобками {...} и не содержа'
+                                   'щим пробелов; при отсутствии аргумента '
+                                   'будет передан стандартный набор значений '
+                                   'для поиска')
 
     def __init__(self, ml_app):
         super().__init__()
@@ -194,23 +256,29 @@ class LoadableHyperSearch(CommandSet):
                 parameters = append_parameter_profixes(parameters)
                 check_params_validity(self.app.config, parameters)
             except ValueError as e:
-                print(f'Не удалось расшифровать введенные параметры: они должны быть представлены словарем (dict) '
-                      f'без пробелов с валидными для данной модели параметрами, заключенными в кавычки, и значениями: '
-                      f'{e}')
+                print(f'Не удалось расшифровать введенные параметры: они '
+                      f'должны быть представлены словарем (dict) без пробелов '
+                      f'с валидными для данной модели параметрами, '
+                      f'заключенными в кавычки, и значениями: {e}')
                 return
         else:
             parameters = ''
         self.app.poutput('Оцениваем алгоритм и гиперпараметры...')
         if not self.app.data:
-            self.app.data = load_data(self.app.config['loadpath'], self.app.config['targetcolumn'])
-        params, scores = hypersearch(self.app.config, self.app.data, parameters)
-        self.app.poutput(f'Метрики оцениваемого алгоритма: accuracy (balanced): '
-                         f'{round(float(np.mean(scores["test_balanced_accuracy"])), 4)},'
-                         f' '
-                         f'(метод оценки - nested cross-validation). Модель: {self.app.config["model"]}, '
-                         f'scaler: {self.app.config["scaler"]}, dimreduct: {self.app.config["dimreduct"]}, '
-                         f'feateng: {self.app.config["feateng"]}')
-        self.app.poutput(f'Лучший набор параметров из исследованных GridSearch: {params}')
+            self.app.data = load_data(self.app.config['loadpath'],
+                                      self.app.config['targetcolumn'])
+        params, scores = hypersearch(self.app.config, self.app.data,
+                                     parameters)
+        accuracy_mean = float(np.mean(scores["test_balanced_accuracy"]))
+        self.app.poutput(f'Метрики оцениваемого алгоритма: accuracy '
+                         f'(balanced): {round(accuracy_mean, 4)} (метод '
+                         f'оценки - nested cross-validation). Модель: '
+                         f'{self.app.config["model"]}, scaler: '
+                         f'{self.app.config["scaler"]}, dimreduct: '
+                         f'{self.app.config["dimreduct"]}, feateng: '
+                         f'{self.app.config["feateng"]}')
+        self.app.poutput(f'Лучший набор параметров из исследованных '
+                         f'GridSearch: {params}')
 
 
 @with_default_category('Обучение и оценка (логистическая регрессия)')

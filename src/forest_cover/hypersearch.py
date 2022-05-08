@@ -27,17 +27,23 @@ DEFAULT_SEARCH_GRID = {
 
 
 def hypersearch(config, data, parameters) -> tuple[dict, dict]:
-    cv_inner = KFold(n_splits=4, shuffle=True, random_state=config['randomstate'])
-    cv_outer = KFold(n_splits=8, shuffle=True, random_state=config['randomstate'])
-    model = set_model(config['model'], NOT_SO_DEFAULT_PARAMETERS[config['model']])
+    cv_inner = KFold(n_splits=4, shuffle=True,
+                     random_state=config['randomstate'])
+    cv_outer = KFold(n_splits=8, shuffle=True,
+                     random_state=config['randomstate'])
+    model = set_model(config['model'],
+                      NOT_SO_DEFAULT_PARAMETERS[config['model']])
     if not parameters:
         parameters = DEFAULT_SEARCH_GRID[config['model']]
-    pipeline = create_pipeline(scaler=config['scaler'], dimreduct=config['dimreduct'], model=model)
-    clf = GridSearchCV(pipeline, parameters, scoring='accuracy', n_jobs=-1, cv=cv_inner, refit=True)
-    scores = cross_validate(clf, data[0], data[1], cv=cv_outer, scoring=SCORING,
-                            return_train_score=False, error_score='raise', n_jobs=-1)
+    pipeline = create_pipeline(scaler=config['scaler'],
+                               dimreduct=config['dimreduct'], model=model)
+    clf = GridSearchCV(pipeline, parameters, scoring='accuracy', n_jobs=-1,
+                       cv=cv_inner, refit=True)
+    scores = cross_validate(clf, data[0], data[1], cv=cv_outer,
+                            scoring=SCORING, n_jobs=-1)
 
-    search_final = GridSearchCV(pipeline, parameters, scoring='accuracy', cv=cv_inner, refit=True, n_jobs=-1)
+    search_final = GridSearchCV(pipeline, parameters, scoring='accuracy',
+                                n_jobs=-1, cv=cv_inner, refit=True)
 
     clf = GridSearchCV(estimator=pipeline, param_grid=parameters, cv=cv_outer)
     clf.fit(data[0], data[1])
@@ -47,7 +53,8 @@ def hypersearch(config, data, parameters) -> tuple[dict, dict]:
 
 def check_params_validity(config: dict, parameters: dict) -> None:
     model = set_model(config['model'], {})
-    pipeline = create_pipeline(scaler=config['scaler'], dimreduct=config['dimreduct'], model=model)
+    pipeline = create_pipeline(scaler=config['scaler'],
+                               dimreduct=config['dimreduct'], model=model)
     pipeline.set_params(**parameters)
 
 
