@@ -15,7 +15,7 @@ from .hypersearch import hypersearch, check_params_validity, \
     append_parameter_profixes
 
 
-def finilize(app: Any, parameters: dict) -> None:
+def finilize(app: Any, parameters: dict[str, Any]) -> None:
     if not app.data:
         app.data = load_data(app.config['loadpath'],
                              app.config['targetcolumn'])
@@ -32,8 +32,9 @@ def finilize(app: Any, parameters: dict) -> None:
         f"{round(float(np.mean(scores['test_balanced_accuracy'])), 4)}")
 
 
-def parse_unknown_args(model: str, u_args: list, k_args: argparse.Namespace) \
-        -> dict:
+def parse_unknown_args(model: str,
+                       u_args: list[Any],
+                       k_args: argparse.Namespace) -> dict[str, Any]:
     uknown_parameters = {}
     if len(u_args) % 2 != 0:
         raise ValueError('Список дополнительных аругментов имеет '
@@ -100,12 +101,12 @@ class LoadableLogit(CommandSet):
                               help='максимальное число итераций при попытке до'
                                    'стижения сходимости [по умолчанию: 1000]')
 
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__()
         self.app = ml_app
 
-    @cmd2.with_argparser(train_parser, with_unknown_args=True)
-    def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
+    @cmd2.with_argparser(train_parser, with_unknown_args=True)  # type: ignore
+    def do_train(self, ns: argparse.Namespace, unknown: list[str]) -> None:
         if ns.penalty in ['l1', 'elasticnet']:
             unknown.append('--solver')
             unknown.append('saga')
@@ -138,12 +139,12 @@ class LoadableTree(CommandSet):
                               choices=['gini', 'entropy'],
                               help='функция, оценивающая качество разделения')
 
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__()
         self.app = ml_app
 
-    @cmd2.with_argparser(train_parser, with_unknown_args=True)
-    def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
+    @cmd2.with_argparser(train_parser, with_unknown_args=True)  # type: ignore
+    def do_train(self, ns: argparse.Namespace, unknown: list[str]) -> None:
         try:
             ns.max_depth = int(ns.max_depth)
         except ValueError:
@@ -186,12 +187,12 @@ class LoadableForest(CommandSet):
                               help='функция, оценивающая качество '
                                    'разделения [по умолчанию: gini]')
 
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__()
         self.app = ml_app
 
-    @cmd2.with_argparser(train_parser, with_unknown_args=True)
-    def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
+    @cmd2.with_argparser(train_parser, with_unknown_args=True)  # type: ignore
+    def do_train(self, ns: argparse.Namespace, unknown: list[str]) -> None:
         try:
             ns.max_depth = int(ns.max_depth)
         except ValueError:
@@ -221,12 +222,12 @@ class LoadablekNN(CommandSet):
                               help='функция взвешивания [по умолчанию: '
                                    'uniform]')
 
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__()
         self.app = ml_app
 
-    @cmd2.with_argparser(train_parser, with_unknown_args=True)
-    def do_train(self, ns: argparse.Namespace, unknown: list) -> None:
+    @cmd2.with_argparser(train_parser, with_unknown_args=True)  # type: ignore
+    def do_train(self, ns: argparse.Namespace, unknown: list[str]) -> None:
         finilize(self.app, parse_unknown_args(self.app.config['model'],
                                               unknown, ns))
 
@@ -244,11 +245,11 @@ class LoadableHyperSearch(CommandSet):
                                    'будет передан стандартный набор значений '
                                    'для поиска')
 
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__()
         self.app = ml_app
 
-    @cmd2.with_argparser(hyper_parser)
+    @cmd2.with_argparser(hyper_parser)  # type: ignore
     def do_hypersearch(self, ns: argparse.Namespace) -> None:
         if ns.param_grid:
             try:
@@ -264,7 +265,7 @@ class LoadableHyperSearch(CommandSet):
         else:
             parameters = ''
         self.app.poutput('Оцениваем алгоритм и гиперпараметры...')
-        if not self.app.data:
+        if not self.app.data[0]:
             self.app.data = load_data(self.app.config['loadpath'],
                                       self.app.config['targetcolumn'])
         params, scores = hypersearch(self.app.config, self.app.data,
@@ -283,23 +284,23 @@ class LoadableHyperSearch(CommandSet):
 
 @with_default_category('Обучение и оценка (логистическая регрессия)')
 class LoadableLogitHyperSearch(LoadableHyperSearch):
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__(ml_app)
 
 
 @with_default_category('Обучение и оценка (дерево решений)')
 class LoadableTreeHyperSearch(LoadableHyperSearch):
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__(ml_app)
 
 
 @with_default_category('Обучение и оценка (случайный лес)')
 class LoadableForestHyperSearch(LoadableHyperSearch):
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__(ml_app)
 
 
 @with_default_category('Обучение и оценка (kNN)')
 class LoadableKnnHyperSearch(LoadableHyperSearch):
-    def __init__(self, ml_app):
+    def __init__(self, ml_app: Any):
         super().__init__(ml_app)

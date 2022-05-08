@@ -3,6 +3,7 @@ import argparse
 import warnings
 import pandas as pd
 import hashlib
+from typing import Any
 
 from .pathhandler import make_abs_path, check_file_exists, \
     check_dir_exists, check_extension
@@ -13,24 +14,24 @@ from .featureeng import make_new_features
 from .datahandler import load_data
 
 
-CONFIG_DEFAULTS = {'loadpath': 'data/train.csv',
-                   'exportpath': 'data/submission.csv',
-                   'dumppath': 'data/model.joblib',
-                   'model': 'logit',
-                   'scaler': 'none',
-                   'dimreduct': 'none',
-                   'feateng': 'none',
-                   'eval': 10,
-                   'targetcolumn': 'Cover_Type',
-                   'randomstate': 42}
+CONFIG_DEFAULTS: dict[str, Any] = {'loadpath': 'data/train.csv',
+                                   'exportpath': 'data/submission.csv',
+                                   'dumppath': 'data/model.joblib',
+                                   'model': 'logit',
+                                   'scaler': 'none',
+                                   'dimreduct': 'none',
+                                   'feateng': 'none',
+                                   'eval': 10,
+                                   'targetcolumn': 'Cover_Type',
+                                   'randomstate': 42}
 
 FOREST_COVER_HASH = '44b7913f39ca108f39febca9f0aa00df821827a8'
 
 
 class MLApp(cmd2.Cmd):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, auto_load_commands=False, **kwargs)
+    def __init__(self) -> None:
+        super().__init__(auto_load_commands=False)
 
         self.hidden_commands.extend(['alias', 'edit', 'macro',
                                      'run_pyscript', 'run_script',
@@ -42,7 +43,7 @@ class MLApp(cmd2.Cmd):
                                 '\'help\'. Выход: \'quit\'.', bold=True)
 
         self.config = CONFIG_DEFAULTS
-        self.data = None
+        self.data: tuple[Any, Any] = (None, None)
 
         self._logit = LoadableLogit(self)
         self._tree = LoadableTree(self)
@@ -179,7 +180,7 @@ class MLApp(cmd2.Cmd):
     paths_parser.add_argument('-r', '--reset', action='store_true',
                               help='сброс на значения по умолчанию')
 
-    @cmd2.with_category('Управление файлами')
+    @cmd2.with_category('Управление файлами')  # type: ignore
     @cmd2.with_argparser(paths_parser)
     def do_paths(self, args: argparse.Namespace) -> None:
         if args.reset:
@@ -205,7 +206,7 @@ class MLApp(cmd2.Cmd):
                                     'машстабирования данных или отключите его '
                                     '(none).')
 
-    @cmd2.with_category('Препроцессинг')
+    @cmd2.with_category('Препроцессинг')  # type: ignore
     @cmd2.with_argparser(scaler_parser)
     def do_scaler(self, args: argparse.Namespace) -> None:
         self.config['scaler'] = args.scaler
@@ -225,7 +226,7 @@ class MLApp(cmd2.Cmd):
                                        'уменьшения размерности '
                                        'или отключите его (none).')
 
-    @cmd2.with_category('Препроцессинг')
+    @cmd2.with_category('Препроцессинг')  # type: ignore
     @cmd2.with_argparser(dimreduct_parser)
     def do_dimreduct(self, args: argparse.Namespace) -> None:
         self.config['dimreduct'] = args.dimreduct
@@ -246,7 +247,7 @@ class MLApp(cmd2.Cmd):
                                      'подготовленный специально для датасета '
                                      'из Kaggle Forest Cover Type Prediction')
 
-    @cmd2.with_category('Препроцессинг')
+    @cmd2.with_category('Препроцессинг')  # type: ignore
     @cmd2.with_argparser(feateng_parser)
     def do_feateng(self, args: argparse.Namespace) -> None:
         if args.feateng == 'none':
@@ -254,7 +255,7 @@ class MLApp(cmd2.Cmd):
                                   self.config['targetcolumn'])
             self.poutput('Теперь будет использоваться оригинальный датасет')
         elif args.feateng == 'auto':
-            if not self.data or self.config['feateng'] == 'none':
+            if not self.data[0] or self.config['feateng'] == 'none':
                 self.data = load_data(self.config['loadpath'],
                                       self.config['targetcolumn'])
                 if hashlib.sha1(pd.util.hash_pandas_object(

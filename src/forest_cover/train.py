@@ -1,7 +1,9 @@
 from joblib import dump
 from .pathhandler import make_abs_path
+from typing import Any
 
 import numpy as np
+import pandas as pd
 import mlflow
 import mlflow.sklearn
 
@@ -12,8 +14,9 @@ from sklearn.model_selection import KFold
 SCORING = ['balanced_accuracy', 'f1_weighted', 'roc_auc_ovo_weighted']
 
 
-def train(pipeline: Pipeline, data: tuple, parameters: dict, config: dict) \
-        -> dict:
+def train(pipeline: Pipeline, data: tuple[pd.DataFrame, pd.Series],
+          parameters: dict[str, Any], config: dict[str, Any]) \
+        -> Any:
     with mlflow.start_run(run_name=f"{config['model']} "
                                    f"(folds={config['eval']}, "
                                    f"rand={config['randomstate']})"):
