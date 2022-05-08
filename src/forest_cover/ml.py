@@ -41,7 +41,7 @@ CONFIG_DEFAULTS: dict[str, Any] = {
 FOREST_COVER_HASH = "44b7913f39ca108f39febca9f0aa00df821827a8"
 
 
-class MLApp(cmd2.Cmd):
+class MLApp(cmd2.Cmd):  # type: ignore
     def __init__(self) -> None:
         super().__init__(auto_load_commands=False)
 

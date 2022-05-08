@@ -86,7 +86,7 @@ def parse_unknown_args(
 
 
 @with_default_category("Обучение и оценка (логистическая регрессия)")
-class LoadableLogit(CommandSet):
+class LoadableLogit(CommandSet):  # type: ignore
 
     train_parser = cmd2.Cmd2ArgumentParser()
     train_parser.add_argument(
@@ -129,7 +129,7 @@ class LoadableLogit(CommandSet):
 
 
 @with_default_category("Обучение и оценка (дерево решений)")
-class LoadableTree(CommandSet):
+class LoadableTree(CommandSet):  # type: ignore
     train_parser = cmd2.Cmd2ArgumentParser()
     train_parser.add_argument(
         "-d",
@@ -178,7 +178,7 @@ class LoadableTree(CommandSet):
 
 
 @with_default_category("Обучение и оценка (случайный лес)")
-class LoadableForest(CommandSet):
+class LoadableForest(CommandSet):  # type: ignore
 
     train_parser = cmd2.Cmd2ArgumentParser()
     train_parser.add_argument(
@@ -235,7 +235,7 @@ class LoadableForest(CommandSet):
 
 
 @with_default_category("Обучение и оценка (kNN)")
-class LoadablekNN(CommandSet):
+class LoadablekNN(CommandSet):  # type: ignore
 
     train_parser = cmd2.Cmd2ArgumentParser()
     train_parser.add_argument(
@@ -264,7 +264,7 @@ class LoadablekNN(CommandSet):
         finilize(self.app, parse_unknown_args(self.app.config["model"], unknown, ns))
 
 
-class LoadableHyperSearch(CommandSet):
+class LoadableHyperSearch(CommandSet):  # type: ignore
 
     hyper_parser = cmd2.Cmd2ArgumentParser()
     hyper_parser.add_argument(

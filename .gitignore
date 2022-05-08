@@ -2,3 +2,5 @@ data
 mlruns
 __pychache__
 *.pyc
+.nox
+.mypy_cache
