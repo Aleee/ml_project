@@ -28,7 +28,7 @@ jobs:
         with:
          python-version: '3.9'
       - run: pip install --upgrade pip
-      - run: pip install black==v22.3.0 flake==v4.0.1 mypy==v0.950
+      - run: pip install black==v22.3.0 flake8==v4.0.1 mypy==v0.950
       - run: black SRC
-      - run: flake src
+      - run: flake8 src
       - run: mypy src
