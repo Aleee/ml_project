@@ -16,28 +16,30 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.decomposition import PCA
 
 SCALERS = {
-    'standard': StandardScaler(),
-    'minmax': MinMaxScaler(),
-    'maxabs': MaxAbsScaler(),
-    'robust': RobustScaler()
+    "standard": StandardScaler(),
+    "minmax": MinMaxScaler(),
+    "maxabs": MaxAbsScaler(),
+    "robust": RobustScaler(),
 }
-DIMREDUCTS = {
-    'pca': PCA(),
-    'lda': LinearDiscriminantAnalysis()
-}
+DIMREDUCTS = {"pca": PCA(), "lda": LinearDiscriminantAnalysis()}
 
 
-def create_pipeline(scaler: str,
-                    dimreduct: str,
-                    model: Union[LogisticRegression, DecisionTreeClassifier,
-                                 RandomForestClassifier, NearestNeighbors]) \
-        -> Pipeline:
+def create_pipeline(
+    scaler: str,
+    dimreduct: str,
+    model: Union[
+        LogisticRegression,
+        DecisionTreeClassifier,
+        RandomForestClassifier,
+        NearestNeighbors,
+    ],
+) -> Pipeline:
     pipeline_steps = []
 
-    if scaler != 'none':
-        pipeline_steps.append(('sca', SCALERS[scaler]))
-    if dimreduct != 'none':
-        pipeline_steps.append(('dmr', DIMREDUCTS[dimreduct]))
-    pipeline_steps.append(('clf', model))
+    if scaler != "none":
+        pipeline_steps.append(("sca", SCALERS[scaler]))
+    if dimreduct != "none":
+        pipeline_steps.append(("dmr", DIMREDUCTS[dimreduct]))
+    pipeline_steps.append(("clf", model))
 
     return Pipeline(steps=pipeline_steps)
