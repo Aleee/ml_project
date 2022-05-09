@@ -135,14 +135,6 @@ class MLApp(cmd2.Cmd):  # type: ignore
     parser_load.add_argument(
         "input_file", type=str, help="csv-файл с анализируемыми данными"
     )
-    parser_export = setpath_subparsers.add_parser(
-        "export", help="задать путь для " "сохранения csv-файла " "с предиктом"
-    )
-    parser_export.add_argument(
-        "output_file",
-        type=str,
-        help="csv-файл, который будет создан " "по результам работы предикта",
-    )
     parser_dump = setpath_subparsers.add_parser(
         "dump", help="задать путь для сохране" "ния параметров модели"
     )
@@ -166,21 +158,6 @@ class MLApp(cmd2.Cmd):  # type: ignore
             )
 
     parser_load.set_defaults(func=setpath_load)
-
-    def setpath_export(self, args: argparse.Namespace) -> None:
-        filepath = make_abs_path(args.output_file)
-        if check_dir_exists(filepath):
-            if check_extension(filepath, "csv"):
-                self.config["exportpath"] = filepath
-                self.poutput(f"Установлен путь " f"для выгрузки предикта: {filepath}")
-            else:
-                raise ValueError("Указан путь к файлу " "с форматом, отличным от csv")
-        else:
-            raise FileNotFoundError(
-                f"Указанная папка для размещения " f"файла не найдена ({filepath})"
-            )
-
-    parser_export.set_defaults(func=setpath_export)
 
     def setpath_dump(self, args: argparse.Namespace) -> None:
         filepath = make_abs_path(args.dump_file)

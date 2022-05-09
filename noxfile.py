@@ -4,7 +4,7 @@ import nox
 @nox.session
 def typecheck(session):
     session.install('mypy')
-    session.run('mypy', 'src', '--config-file', 'mypy.ini')
+    session.run('mypy', 'src')
 
 
 @nox.session
