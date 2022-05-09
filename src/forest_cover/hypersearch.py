@@ -16,7 +16,7 @@ DEFAULT_SEARCH_GRID: dict[str, Any] = {
         "clf__min_samples_leaf": [5, 10, 20, 50],
     },
     "forest": {"clf__n_estimators": [50, 150, 250], "clf__max_depth": [3, 15, 50]},
-    "knn": {"clf__n_neighbors": [5, 10, 20], "clf__leaf_size": [10, 25, 40]},
+    "knn": {"clf__n_neighbors": [5, 10, 20], "clf__leaf_size": [10, 50]},
 }
 
 

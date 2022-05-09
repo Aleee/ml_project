@@ -27,7 +27,6 @@ from .datahandler import load_data
 
 CONFIG_DEFAULTS: dict[str, Any] = {
     "loadpath": "data/train.csv",
-    "exportpath": "data/submission.csv",
     "dumppath": "data/model.joblib",
     "model": "logit",
     "scaler": "none",
@@ -205,8 +204,6 @@ class MLApp(cmd2.Cmd):  # type: ignore
             self.poutput(
                 f"Путь к датасету:"
                 f" {make_abs_path(self.config['loadpath'])}\n"
-                f"Путь для выгрузки предикта:"
-                f" {make_abs_path(self.config['exportpath'])}\n"
                 f"Путь для выгрузки данных модели:"
                 f" {make_abs_path(self.config['dumppath'])}\n"
             )
@@ -278,7 +275,7 @@ class MLApp(cmd2.Cmd):  # type: ignore
             self.data = load_data(self.config["loadpath"], self.config["targetcolumn"])
             self.poutput("Теперь будет использоваться оригинальный датасет")
         elif args.feateng == "auto":
-            if not self.data[0] or self.config["feateng"] == "none":
+            if self.data[0] is None or self.config["feateng"] == "none":
                 self.data = load_data(
                     self.config["loadpath"], self.config["targetcolumn"]
                 )

@@ -8,12 +8,12 @@ from typing import Any
 from .models import set_model, clean_parameters, MODELS
 from .pipeline import create_pipeline
 from .datahandler import load_data
-from .train import train
+from .train import train, SCORING
 from .hypersearch import hypersearch, check_params_validity, append_parameter_profixes
 
 
 def finilize(app: Any, parameters: dict[str, Any]) -> None:
-    if not app.data:
+    if app.data[0] is None:
         app.data = load_data(app.config["loadpath"], app.config["targetcolumn"])
     model = set_model(app.config["model"], parameters)
     app.poutput(
@@ -50,20 +50,17 @@ def parse_unknown_args(
                 f"Неверный аргумент {name}: аргумент должен " f"начинаться с --"
             ) from e
         try:
-            value = dict(value)
+            value = int(value)
         except ValueError:
             try:
-                value = int(value)
+                value = float(value)
             except ValueError:
-                try:
-                    value = float(value)
-                except ValueError:
-                    if str.lower(value) == "none":
-                        value = None
-                    elif str.lower(value) == "true":
-                        value = True
-                    elif str.lower(value) == "false":
-                        value = False
+                if str.lower(value) == "none":
+                    value = None
+                elif str.lower(value) == "true":
+                    value = True
+                elif str.lower(value) == "false":
+                    value = False
             try:
                 uknown_parameters[name[2:]] = value
             except KeyError as e:
@@ -302,23 +299,34 @@ class LoadableHyperSearch(CommandSet):  # type: ignore
         else:
             parameters = ""
         self.app.poutput("Оцениваем алгоритм и гиперпараметры...")
-        if not self.app.data[0]:
+        if self.app.data[0] is None:
             self.app.data = load_data(
                 self.app.config["loadpath"], self.app.config["targetcolumn"]
             )
         params, scores = hypersearch(self.app.config, self.app.data, parameters)
-        accuracy_mean = float(np.mean(scores["test_balanced_accuracy"]))
+        accuracy_mean = float(np.mean(scores["test_" + SCORING[0]]))
+        f1_mean = float(np.mean(scores["test_" + SCORING[1]]))
+        roc_auc = float(np.mean(scores["test_" + SCORING[2]]))
+        model = set_model(self.app.config["model"])
+        pipeline = create_pipeline(
+            self.app.config["scaler"], self.app.config["dimreduct"], model
+        )
+        train(pipeline, self.app.data, params, self.app.config, True)
         self.app.poutput(
-            f"Метрики оцениваемого алгоритма: accuracy "
-            f"(balanced): {round(accuracy_mean, 4)} (метод "
-            f"оценки - nested cross-validation). Модель: "
+            f"Метрики оцениваемого алгоритма (метод оценки - nested cross-validation): "
+            f"accuracy (balanced): "
+            f"{round(accuracy_mean, 4)}, "
+            f"F1 (weighted): "
+            f"{round(f1_mean, 4)}, "
+            f"ROC AUC (ovo): "
+            f"{round(roc_auc, 4)}. Модель: "
             f'{self.app.config["model"]}, scaler: '
             f'{self.app.config["scaler"]}, dimreduct: '
             f'{self.app.config["dimreduct"]}, feateng: '
             f'{self.app.config["feateng"]}'
         )
         self.app.poutput(
-            f"Лучший набор параметров из исследованных " f"GridSearch: {params}"
+            f"Лучший набор параметров из исследованных GridSearch: {params}"
         )
 
 
