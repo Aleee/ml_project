@@ -22,13 +22,15 @@ NOT_SO_DEFAULT_PARAMETERS: dict[str, Any] = {
 
 
 def set_model(
-    model: str, parameters: dict[str, Any]
+    model: str, parameters: Union[dict[str, Any], None] = None
 ) -> Union[
     LogisticRegression,
     DecisionTreeClassifier,
     RandomForestClassifier,
     KNeighborsClassifier,
 ]:
+    if not parameters:
+        parameters = NOT_SO_DEFAULT_PARAMETERS[model]
     return MODELS[model].set_params(**parameters)
 
 

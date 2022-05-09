@@ -19,14 +19,16 @@ def train(
     data: tuple[pd.DataFrame, pd.Series],
     parameters: dict[str, Any],
     config: dict[str, Any],
+    hypersearch: bool = False,
 ) -> Any:
     with mlflow.start_run(
-        run_name=f"{config['model']} "
-        f"(folds={config['eval']}, "
+        run_name=f"{config['model']}, "
+        f"(hypersearch: {str(hypersearch)}, "
+        f"folds={config['eval']}, "
         f"rand={config['randomstate']})"
     ):
         cv_procedure = KFold(
-            n_splits=5, shuffle=True, random_state={config["randomstate"]}
+            n_splits=5, shuffle=True, random_state=config["randomstate"]
         )
         scores = cross_validate(
             pipeline, data[0], data[1], cv=cv_procedure, scoring=SCORING, n_jobs=-1
@@ -42,6 +44,6 @@ def train(
                 "ROC_AUC": float(np.mean(scores["test_roc_auc_ovo_weighted"])),
             }
         )
-        mlflow.sklearn.log_model(pipeline, "logit")
+        mlflow.sklearn.log_model(pipeline, config["model"])
         dump(pipeline, make_abs_path(config["dumppath"]))
         return scores
