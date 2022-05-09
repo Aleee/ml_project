@@ -36,6 +36,8 @@ def train(
         mlflow.log_param("SCALER", config["scaler"])
         mlflow.log_param("FEATENG", config["feateng"])
         mlflow.log_param("DIMREDUCT", config["dimreduct"])
+        if hypersearch:
+            parameters = {k[5:]: v for k, v in parameters.items()}
         mlflow.log_params(parameters)
         mlflow.log_metrics(
             {
