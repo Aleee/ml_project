@@ -4,4 +4,3 @@ __pychache__
 *.pyc
 .nox
 .mypy_cache
-.github
