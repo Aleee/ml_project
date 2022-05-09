@@ -27,6 +27,7 @@ from .datahandler import load_data
 
 CONFIG_DEFAULTS: dict[str, Any] = {
     "loadpath": "data/train.csv",
+    "exportpath": "data/submission.csv",
     "dumppath": "data/model.joblib",
     "model": "logit",
     "scaler": "none",
