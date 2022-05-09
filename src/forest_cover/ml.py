@@ -32,7 +32,7 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     "scaler": "none",
     "dimreduct": "none",
     "feateng": "none",
-    "eval": 10,
+    "eval": 5,
     "targetcolumn": "Cover_Type",
     "randomstate": 42,
 }
@@ -274,6 +274,7 @@ class MLApp(cmd2.Cmd):  # type: ignore
         if args.feateng == "none":
             self.data = load_data(self.config["loadpath"], self.config["targetcolumn"])
             self.poutput("Теперь будет использоваться оригинальный датасет")
+            self.config["feateng"] = "none"
         elif args.feateng == "auto":
             if self.data[0] is None or self.config["feateng"] == "none":
                 self.data = load_data(
@@ -296,7 +297,7 @@ class MLApp(cmd2.Cmd):  # type: ignore
                         "Успешно! Теперь будет использоваться "
                         "датасет с кастомными признаками"
                     )
-                    self.config["feateng"] = args.feateng
+                    self.config["feateng"] = "auto"
             else:
                 self.poutput("Feature engineering уже проведен")
 

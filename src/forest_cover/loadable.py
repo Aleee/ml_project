@@ -122,6 +122,9 @@ class LoadableLogit(CommandSet):  # type: ignore
             if ns.penalty == "elasticnet":
                 unknown.append("--l1_ratio")
                 unknown.append("0.5")
+        elif ns.penalty == "l2":
+            unknown.append("--solver")
+            unknown.append("lbfgs")
         finilize(self.app, parse_unknown_args(self.app.config["model"], unknown, ns))
 
 

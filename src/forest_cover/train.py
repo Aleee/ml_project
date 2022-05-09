@@ -22,7 +22,7 @@ def train(
     hypersearch: bool = False,
 ) -> Any:
     with mlflow.start_run(
-        run_name=f"{config['model']}, "
+        run_name=f"{config['model']} "
         f"(hypersearch: {str(hypersearch)}, "
         f"folds={config['eval']}, "
         f"rand={config['randomstate']})"
