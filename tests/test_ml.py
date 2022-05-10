@@ -15,7 +15,7 @@ EXC_FILENOTFOUND = "FileNotFoundError"
 EXC_VALUEERROR = "ValueError"
 EXC_KEYERROR = "KeyError"
 TXT_RANDOMSTATE = "Число должно быть положительным"
-TXT_FEATENGDONE = "Эта опция доступна только для датасета Forest Cover Type Prediction"
+TXT_FEATENGDONE = "Feature engineering уже проведен"
 
 
 class AppTester(cmd2_ext_test.ExternalTestMixin, MLApp):
@@ -89,13 +89,8 @@ def test_feateng_wrong_input(ml_app):
     assert ERR_ARGUMENT in out.stderr
 
 
-def test_feateng_not_forestdataset(ml_app):
+def test_feateng_duplicated_runs(ml_app):
     ml_app.app_cmd("feateng auto")
-    out = ml_app.app_cmd("feateng auto")
-    assert TXT_FEATENGDONE in out.stdout
-
-
-def test_feateng_duplicate_runs(ml_app):
     out = ml_app.app_cmd("feateng auto")
     assert TXT_FEATENGDONE in out.stdout
 
