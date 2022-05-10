@@ -220,6 +220,13 @@ class MLApp(cmd2.Cmd):  # type: ignore
     @cmd2.with_category("Настройки")  # type: ignore
     @cmd2.with_argparser(targetcolumn_parser)
     def do_targetcolumn(self, args: argparse.Namespace) -> None:
+        try:
+            self.data = load_data(self.config["loadpath"], args.column_name)
+        except KeyError as e:
+            raise KeyError(
+                f"В датасете по установленному пути отсутствует столбец "
+                f"{args.column_name}"
+            ) from e
         self.config["targetcolumn"] = args.column_name
         self.poutput(
             f"Установлено название столбца с независимой переменной: {args.column_name}"
