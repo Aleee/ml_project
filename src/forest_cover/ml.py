@@ -178,7 +178,7 @@ class MLApp(cmd2.Cmd):  # type: ignore
     parser_dump.set_defaults(func=setpath_dump)
 
     @cmd2.with_argparser(setpath_parser)
-    @cmd2.with_category("Управление файлами")
+    @cmd2.with_category("Настройки")
     def do_setpath(self, args: argparse.Namespace) -> None:
         func = getattr(args, "func", None)
         if func is not None:
@@ -193,7 +193,7 @@ class MLApp(cmd2.Cmd):  # type: ignore
         "-r", "--reset", action="store_true", help="сброс на значения по умолчанию"
     )
 
-    @cmd2.with_category("Управление файлами")  # type: ignore
+    @cmd2.with_category("Настройки")  # type: ignore
     @cmd2.with_argparser(paths_parser)
     def do_paths(self, args: argparse.Namespace) -> None:
         if args.reset:
@@ -207,6 +207,42 @@ class MLApp(cmd2.Cmd):  # type: ignore
                 f"Путь для выгрузки данных модели:"
                 f" {make_abs_path(self.config['dumppath'])}\n"
             )
+
+    # TARGETCOLUMN
+
+    targetcolumn_parser = cmd2.Cmd2ArgumentParser()
+    targetcolumn_parser.add_argument(
+        "column_name",
+        type=str,
+        help="наименование столбца с независимой переменной [по умолчанию: Cover_Type]",
+    )
+
+    @cmd2.with_category("Настройки")  # type: ignore
+    @cmd2.with_argparser(targetcolumn_parser)
+    def do_targetcolumn(self, args: argparse.Namespace) -> None:
+        self.config["targetcolumn"] = args.column_name
+        self.poutput(
+            f"Установлено название столбца с независимой переменной: {args.column_name}"
+        )
+
+    # RANDOMSTATE
+
+    randomstate_parser = cmd2.Cmd2ArgumentParser()
+    randomstate_parser.add_argument(
+        "random_state",
+        type=int,
+        help="целое положительное число, определяющее начальное состояние генератора "
+        "случайных чисел",
+    )
+
+    @cmd2.with_category("Настройки")  # type: ignore
+    @cmd2.with_argparser(randomstate_parser)
+    def do_randomstate(self, args: argparse.Namespace) -> None:
+        if args.random_state < 1:
+            self.poutput("Значение не установлено. Число должно быть положительным")
+        else:
+            self.config["randomstate"] = args.random_state
+            self.poutput(f"Установлено число random_state: {args.random_state}")
 
     # SCALER
 
