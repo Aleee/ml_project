@@ -40,20 +40,23 @@ def parse_unknown_args(
             "неверную длину (заданы аргументы без значений)"
         )
     for name, value in zip(u_args[::2], u_args[1::2]):
+        print(name, value)
         try:
             if name[:2] != "--":
                 raise ValueError(
-                    f"Неверный аргумент {name}: аргумент " f"должен начинаться с --"
+                    f"Неверный аргумент {name}: аргумент должен начинаться с --"
                 )
         except ValueError as e:
             raise ValueError(
-                f"Неверный аргумент {name}: аргумент должен " f"начинаться с --"
+                f"Неверный аргумент {name}: аргумент должен начинаться с --"
             ) from e
         try:
             value = int(value)
+            uknown_parameters[name[2:]] = value
         except ValueError:
             try:
                 value = float(value)
+                uknown_parameters[name[2:]] = value
             except ValueError:
                 if str.lower(value) == "none":
                     value = None
@@ -61,18 +64,20 @@ def parse_unknown_args(
                     value = True
                 elif str.lower(value) == "false":
                     value = False
-            try:
-                uknown_parameters[name[2:]] = value
-            except KeyError as e:
-                raise KeyError(
-                    f"Не удалось разместить параметр {name} " f"(возможно, дубликат?)"
-                ) from e
+                try:
+                    uknown_parameters[name[2:]] = value
+                except KeyError as e:
+                    raise KeyError(
+                        f"Не удалось разместить параметр {name} (возможно, дубликат?)"
+                    ) from e
 
+    print(uknown_parameters)
     known_parameters = clean_parameters(vars(k_args))
     all_parameters = uknown_parameters | known_parameters
 
     for key, value in all_parameters.items():
         try:
+            print(f"{key}: {value}")
             MODELS[model].set_params(**{key: value})
         except ValueError as e:
             raise ValueError(
