@@ -3,18 +3,19 @@ from typing import Any
 
 import nox
 
-nox.options.sessions = "typecheck", "lint", "test"
+nox.options.sessions = "typecheck", "formatcode", "lint", "test"
 locations = "src", "noxfile.py"
 
 
-def install_with_constraints(session: nox.sessions.Session,
-                             *args: str, **kwargs: Any) -> None:
+def install_with_constraints(
+    session: nox.sessions.Session, *args: str, **kwargs: Any
+) -> None:
     """Install packages constrained by Poetry's lock file.
     By default newest versions of packages are installed,
     but we use versions from poetry.lock instead to guarantee
     reproducibility of sessions.
     """
-    f = tempfile.NamedTemporaryFile(mode='w', delete=False)
+    f = tempfile.NamedTemporaryFile(mode="w", delete=False)
     session.run(
         "poetry",
         "export",
@@ -31,14 +32,21 @@ def install_with_constraints(session: nox.sessions.Session,
 def typecheck(session: nox.sessions.Session) -> None:
     args = session.posargs or locations
     install_with_constraints(session, "mypy")
-    session.run('mypy', *args)
+    session.run("mypy", *args)
+
+
+@nox.session
+def formatcode(session: nox.sessions.Session) -> None:
+    args = session.posargs or locations
+    install_with_constraints(session, "black")
+    session.run("black", *args)
 
 
 @nox.session
 def lint(session: nox.sessions.Session) -> None:
     args = session.posargs or locations
     install_with_constraints(session, "flake8")
-    session.run('flake8', *args)
+    session.run("flake8", *args)
 
 
 @nox.session
