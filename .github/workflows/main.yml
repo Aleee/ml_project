@@ -28,7 +28,7 @@ jobs:
         with:
          python-version: '3.9'
       - run: pip install --upgrade pip
-      - run: pip install flake8==v4.0.1 mypy==v0.950 pytest=5.2 cmd2_ext_test=2.0.0 cmd2=2.4.1
+      - run: pip install flake8==v4.0.1 mypy==v0.950 pytest==v5.2 cmd2_ext_test==v2.0.0 cmd2==v2.4.1
       - run: flake8 src
       - run: mypy src
       - run: pytest
