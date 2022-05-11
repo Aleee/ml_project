@@ -40,7 +40,6 @@ def parse_unknown_args(
             "неверную длину (заданы аргументы без значений)"
         )
     for name, value in zip(u_args[::2], u_args[1::2]):
-        print(name, value)
         try:
             if name[:2] != "--":
                 raise ValueError(
@@ -71,13 +70,11 @@ def parse_unknown_args(
                         f"Не удалось разместить параметр {name} (возможно, дубликат?)"
                     ) from e
 
-    print(uknown_parameters)
     known_parameters = clean_parameters(vars(k_args))
     all_parameters = uknown_parameters | known_parameters
 
     for key, value in all_parameters.items():
         try:
-            print(f"{key}: {value}")
             MODELS[model].set_params(**{key: value})
         except ValueError as e:
             raise ValueError(
@@ -297,7 +294,7 @@ class LoadableHyperSearch(CommandSet):  # type: ignore
                 parameters = append_parameter_profixes(parameters)
                 check_params_validity(self.app.config, parameters)
             except ValueError as e:
-                print(
+                self.app.poutput(
                     f"Не удалось расшифровать введенные параметры: они "
                     f"должны быть представлены словарем (dict) без пробелов "
                     f"с валидными для данной модели параметрами, "
